@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ProClean Quote Tool</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;background:#f1f5f9;color:#0f172a;height:100vh;display:flex;flex-direction:column;overflow:hidden}
+#header{background:#1d4ed8;color:#fff;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+#header-left{display:flex;align-items:center;gap:10px}
+#header h1{font-size:15px;font-weight:700;line-height:1.2}
+#header p{font-size:11px;color:#bfdbfe;margin-top:1px}
+#new-btn{background:transparent;border:1px solid #60a5fa;color:#fff;padding:6px 12px;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:5px;transition:background .15s;font-family:inherit}
+#new-btn:hover{background:#1e40af}
+#chat{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px;scroll-behavior:smooth}
+#welcome{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:28px 24px;text-align:center;max-width:620px;margin:0 auto;width:100%}
+#welcome .icon{width:52px;height:52px;background:#dbeafe;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px}
+#welcome h2{font-size:17px;font-weight:700;margin-bottom:6px}
+#welcome p{color:#64748b;font-size:13px;margin-bottom:16px}
+#welcome .chips-label{font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;text-align:left}
+.chip{display:block;width:100%;text-align:left;background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af;border-radius:8px;padding:10px 14px;font-size:13px;cursor:pointer;margin-bottom:6px;transition:background .15s;font-family:inherit}
+.chip:hover{background:#dbeafe}
+.msg{display:flex;max-width:640px;width:100%;margin:0 auto}
+.msg.user{justify-content:flex-end}
+.msg.assistant{justify-content:flex-start}
+.bubble{padding:10px 14px;border-radius:16px;font-size:13px;line-height:1.6;max-width:85%}
+.msg.user .bubble{background:#1d4ed8;color:#fff;border-bottom-right-radius:4px}
+.msg.assistant .bubble{background:#fff;border:1px solid #e2e8f0;color:#0f172a;border-bottom-left-radius:4px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.bubble ul{padding-left:16px;margin:4px 0}.bubble li{margin:2px 0}.bubble strong{font-weight:600}.bubble p{margin:4px 0}
+#typing{display:none;padding:0 16px 4px}
+.dots{background:#fff;border:1px solid #e2e8f0;border-radius:16px;border-bottom-left-radius:4px;padding:12px 16px;display:inline-flex;align-items:center;gap:4px;box-shadow:0 1px 3px rgba(0,0,0,.06);max-width:640px}
+.dot{width:7px;height:7px;background:#93c5fd;border-radius:50%;animation:bounce 1s infinite}
+.dot:nth-child(2){animation-delay:.15s}.dot:nth-child(3){animation-delay:.3s}
+@keyframes bounce{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-6px)}}
+#typing-label{font-size:11px;color:#94a3b8;margin-left:8px}
+#prop-bar-wrap{padding:0 16px 8px;display:none}
+#prop-bar-wrap.visible{display:block}
+#prop-bar{background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:10px 14px;max-width:640px;margin:0 auto}
+.roof-badge{border-radius:5px;padding:2px 8px;font-size:11px;font-weight:600;display:inline-flex;align-items:center;gap:4px}
+.roof-low{background:#dcfce7;color:#166534;border:1px solid #bbf7d0}
+.roof-medium{background:#fef9c3;color:#854d0e;border:1px solid #fde68a}
+.roof-steep{background:#fee2e2;color:#991b1b;border:1px solid #fecaca}
+.roof-unknown{background:#f1f5f9;color:#475569;border:1px solid #cbd5e1}
+#prop-top{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+#prop-info{font-size:12px;font-weight:600;color:#1e3a8a;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+#prop-links{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center}
+#prop-links a{font-size:11px;color:#2563eb;text-decoration:none;display:flex;align-items:center;gap:2px;white-space:nowrap}
+#prop-links a:hover{text-decoration:underline}
+.badge-ok{background:#dcfce7;color:#166534;border:1px solid #bbf7d0;border-radius:5px;padding:2px 8px;font-size:11px;font-weight:600}
+.badge-bad{background:#fee2e2;color:#991b1b;border:1px solid #fecaca;border-radius:5px;padding:2px 8px;font-size:11px;font-weight:600}
+#oos-wrap{padding:0 16px 4px;display:none}
+#oos-wrap.visible{display:block}
+#oos-banner{background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:8px 12px;font-size:12px;color:#c2410c;max-width:640px;margin:0 auto;display:flex;align-items:center;gap:6px}
+.quote-card{border:2px solid #2563eb;border-radius:12px;overflow:hidden;margin-top:8px;box-shadow:0 4px 12px rgba(37,99,235,.15)}
+.qcard-header{background:#1d4ed8;color:#fff;padding:12px 16px;display:flex;align-items:center;justify-content:space-between}
+.qcard-header h3{font-size:14px;font-weight:700}
+.qcard-header p{font-size:11px;color:#bfdbfe;margin-top:2px}
+.qcard-actions{display:flex;gap:6px}
+.qcard-btn{background:#1e40af;color:#fff;border:none;border-radius:6px;padding:5px 10px;font-size:11px;cursor:pointer;display:flex;align-items:center;gap:4px;transition:background .15s;font-family:inherit}
+.qcard-btn:hover{background:#1e3a8a}
+table.quote-table{width:100%;border-collapse:collapse;background:#fff}
+table.quote-table th{background:#f8fafc;font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.04em;padding:8px 14px;text-align:left;border-bottom:1px solid #e2e8f0}
+table.quote-table th.right{text-align:right}
+table.quote-table td{padding:10px 14px;border-bottom:1px solid #f1f5f9;font-size:13px;vertical-align:top}
+table.quote-table td.price{text-align:right;font-weight:700;white-space:nowrap}
+.pkg-badge{background:#eff6ff;color:#1e40af;border-radius:20px;padding:2px 8px;font-size:11px;font-weight:500;white-space:nowrap}
+.ask-chris{color:#d97706;font-weight:700}
+.totals-section{background:#f8fafc;padding:12px 16px;border-top:1px solid #e2e8f0}
+.t-row{display:flex;justify-content:space-between;align-items:center;font-size:13px;margin-bottom:6px}
+.t-row.final{background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 14px;margin-top:8px}
+.t-row.final span:first-child{font-weight:700;color:#1e3a8a;font-size:14px}
+.t-row.final span:last-child{font-weight:800;color:#1d4ed8;font-size:18px}
+.green{color:#16a34a;font-weight:600}
+.savings-note{text-align:center;font-size:12px;color:#16a34a;font-weight:600;margin-top:6px}
+.disc-row{display:flex;justify-content:space-between;align-items:center;font-size:13px;margin-bottom:6px;gap:8px}
+.disc-row input{border:1px solid #cbd5e1;border-radius:5px;padding:4px 8px;font-size:12px;width:100px;text-align:right;font-family:inherit}
+.disc-row input:focus{outline:2px solid #2563eb;border-color:#2563eb}
+.notes-section{background:#fefce8;border-top:1px solid #fde68a;padding:10px 14px}
+.notes-section .label{font-size:11px;font-weight:600;color:#a16207;margin-bottom:4px}
+.notes-section .note{font-size:12px;color:#92400e}
+.upsells-section{background:#faf5ff;border-top:1px solid #e9d5ff;padding:10px 14px}
+.upsells-section .label{font-size:11px;font-weight:600;color:#7c3aed;margin-bottom:4px}
+.upsells-section .upsell{font-size:12px;color:#5b21b6}
+#input-area{border-top:1px solid #e2e8f0;background:#fff;padding:12px 16px;flex-shrink:0}
+#input-wrap{max-width:640px;margin:0 auto;display:flex;gap:8px;align-items:flex-end}
+#msg-input{flex:1;border:1px solid #cbd5e1;border-radius:8px;padding:10px 12px;font-size:13px;font-family:inherit;resize:none;min-height:48px;max-height:120px;line-height:1.5;transition:border-color .15s}
+#msg-input:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+#msg-input:disabled{background:#f8fafc;color:#94a3b8}
+#send-btn{background:#1d4ed8;color:#fff;border:none;border-radius:8px;width:48px;height:48px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .15s}
+#send-btn:hover:not(:disabled){background:#1e40af}
+#send-btn:disabled{background:#93c5fd;cursor:not-allowed}
+#input-hint{font-size:11px;color:#94a3b8;text-align:center;margin-top:6px;max-width:640px;margin-left:auto;margin-right:auto}
+#footer{text-align:center;padding:5px;font-size:11px;color:#94a3b8;flex-shrink:0}
+#footer a{color:#94a3b8;text-decoration:none}
+#chat::-webkit-scrollbar{width:5px}
+#chat::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:3px}
+</style>
+</head>
+<body>
+
+<div id="header">
+  <div id="header-left">
+    <svg width="30" height="30" viewBox="0 0 32 32" fill="none" aria-label="ProClean logo">
+      <circle cx="16" cy="16" r="15" stroke="white" stroke-width="1.5"/>
+      <path d="M10 22 C10 22 12 10 16 10 C20 10 22 22 22 22" stroke="white" stroke-width="2" stroke-linecap="round"/>
+      <path d="M8 18 Q16 24 24 18" stroke="white" stroke-width="2" stroke-linecap="round" fill="none"/>
+      <circle cx="16" cy="10" r="2" fill="white"/>
+    </svg>
+    <div>
+      <h1>ProClean Quote Tool</h1>
+      <p>Tell me the address + what they need</p>
+    </div>
+  </div>
+  <button id="new-btn" onclick="startNew()">
+    <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+    New Quote
+  </button>
+</div>
+
+<div id="chat">
+  <div id="welcome">
+    <div class="icon">
+      <svg width="26" height="26" fill="none" viewBox="0 0 24 24" stroke="#2563eb" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
+    </div>
+    <h2>Ready to quote</h2>
+    <p>Just tell me the customer's address and what they're looking for.<br>I'll look up the property and build the quote.</p>
+    <p class="chips-label">Try an example:</p>
+    <button class="chip" onclick="useChip(this.textContent)">Moss removal + deck cleaning — 515 NE 123rd St, Seattle WA 98125</button>
+    <button class="chip" onclick="useChip(this.textContent)">Gutter cleaning quote — 21546 Elm Dr, Brier WA 98036</button>
+    <button class="chip" onclick="useChip(this.textContent)">House washing + windows — 443 Halladay St, Seattle WA 98109</button>
+  </div>
+</div>
+
+<div id="typing">
+  <div class="dots" style="margin:0 auto;max-width:640px">
+    <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+    <span id="typing-label">Looking up property…</span>
+  </div>
+</div>
+
+<div id="prop-bar-wrap">
+  <div id="prop-bar">
+    <div id="prop-top">
+      <div id="prop-info">
+        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline stroke-linecap="round" stroke-linejoin="round" points="9 22 9 12 15 12 15 22"/></svg>
+        <span id="prop-summary">Loading…</span>
+        <span id="area-badge"></span>
+        <span id="roof-badge" style="display:none"></span>
+      </div>
+      <div id="prop-links">
+        <a id="redfin-link" href="#" target="_blank" rel="noopener">Redfin ↗</a>
+        <a id="maps-link" href="#" target="_blank" rel="noopener">Maps ↗</a>
+        <a id="satellite-link" href="#" target="_blank" rel="noopener" style="display:none">Satellite ↗</a>
+        <span id="assessor-links"></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="oos-wrap">
+  <div id="oos-banner">
+    ⚠️ That address is <strong style="margin:0 3px">outside ProClean's service area</strong>. Let the customer know.
+  </div>
+</div>
+
+<div id="input-area">
+  <div id="input-wrap">
+    <textarea id="msg-input" rows="2" placeholder="Tell me the address and what the customer needs… (Enter to send)"></textarea>
+    <button id="send-btn" onclick="sendMessage()" title="Send">
+      <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+    </button>
+  </div>
+  <p id="input-hint">Enter to send · Shift+Enter for new line · Say "apply the bundle" to add the 20% discount</p>
+</div>
+
+<div id="footer"><a href="https://www.perplexity.ai/computer" target="_blank" rel="noopener">Created with Perplexity Computer</a></div>
+
+<script>
+// Same origin — no port needed on Railway
+const API = "";
+
+let propertyData = null;
+
+function fmt(n){ return '$' + Math.round(n).toLocaleString('en-US'); }
+
+function setLoading(on, label){
+  document.getElementById('typing').style.display = on ? 'block' : 'none';
+  document.getElementById('typing-label').textContent = label || 'Thinking…';
+  document.getElementById('msg-input').disabled = on;
+  document.getElementById('send-btn').disabled = on;
+  if(on) scrollBottom();
+}
+
+function scrollBottom(){
+  setTimeout(()=>{ const c=document.getElementById('chat'); c.scrollTop=c.scrollHeight; },60);
+}
+
+function hideWelcome(){
+  const w=document.getElementById('welcome');
+  if(w) w.style.display='none';
+}
+
+function escHtml(t){
+  return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+}
+
+function renderMd(text){
+  text = text.replace(/```json[\s\S]*?```/g,'').trim();
+  text = text.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>');
+  text = text.replace(/\*(.*?)\*/g,'<em>$1</em>');
+  const lines = text.split('\n');
+  let out='', inList=false;
+  for(const line of lines){
+    if(/^[-•]\s/.test(line)){
+      if(!inList){out+='<ul>';inList=true;}
+      out+=`<li>${line.replace(/^[-•]\s/,'')}</li>`;
+    } else {
+      if(inList){out+='</ul>';inList=false;}
+      if(line.trim()) out+=`<p>${line}</p>`;
+    }
+  }
+  if(inList) out+='</ul>';
+  return out;
+}
+
+function showPropertyBar(data){
+  const wrap = document.getElementById('prop-bar-wrap');
+  wrap.classList.add('visible');
+  let parts=[];
+  if(data.sqft) parts.push(`~${data.sqft.toLocaleString()} sqft`);
+  if(data.stories) parts.push(`${data.stories}-story`);
+  if(data.yearBuilt) parts.push(`Built ${data.yearBuilt}`);
+  document.getElementById('prop-summary').textContent = parts.join(' · ') || 'Property found';
+
+  const badge = document.getElementById('area-badge');
+  if(data.inServiceArea===false){
+    badge.innerHTML='<span class="badge-bad">✗ Out of service area</span>';
+    document.getElementById('oos-wrap').classList.add('visible');
+  } else {
+    badge.innerHTML='<span class="badge-ok">✓ In service area</span>';
+  }
+
+  if(data.redfinUrl) document.getElementById('redfin-link').href=data.redfinUrl;
+  if(data.mapsUrl)   document.getElementById('maps-link').href=data.mapsUrl;
+  const satEl = document.getElementById('satellite-link');
+  if(data.satelliteUrl){ satEl.href=data.satelliteUrl; satEl.style.display=''; }
+
+  const extraLinksWrap = document.getElementById('assessor-links');
+  const extraLinks = [];
+  if(data.zillowUrl)  extraLinks.push(`<a href="${data.zillowUrl}" target="_blank" rel="noopener">Zillow ↗</a>`);
+  if(data.realtorUrl) extraLinks.push(`<a href="${data.realtorUrl}" target="_blank" rel="noopener">Realtor.com ↗</a>`);
+  if(data.assessorLinks && data.assessorLinks.length){
+    data.assessorLinks.forEach(al=>{
+      extraLinks.push(`<a href="${al.url}" target="_blank" rel="noopener">${al.label} ↗</a>`);
+    });
+  }
+  extraLinksWrap.innerHTML = extraLinks.join('');
+}
+
+async function analyzeRoof(address, propData){
+  const badge = document.getElementById('roof-badge');
+  badge.style.display='';
+  badge.innerHTML='<span class="roof-badge roof-unknown">🔍 Analyzing roof…</span>';
+  try {
+    const body = { address };
+    if(propData && propData._lat) { body.lat = propData._lat; body.lon = propData._lon; }
+    const r = await fetch(`${API}/api/roof-vision`,{
+      method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)
+    });
+    const data = await r.json();
+    if(data.pitch){
+      const pitchMap = {low:'🟢 Low pitch',medium:'🟡 Medium pitch',steep:'🔴 Steep pitch'};
+      const cls = {low:'roof-low',medium:'roof-medium',steep:'roof-steep'}[data.pitch]||'roof-unknown';
+      const typeStr = data.roofType && data.roofType!=='unknown' ? ` · ${data.roofType}` : '';
+      const confStr = data.confidence==='low' ? ' (low confidence)' : '';
+      badge.innerHTML=`<span class="roof-badge ${cls}" title="${data.reasoning||''}${confStr}">${pitchMap[data.pitch]||data.pitch}${typeStr}</span>`;
+      if(propertyData){ propertyData.roofPitch=data.pitch; propertyData.roofType=data.roofType; }
+    } else {
+      badge.innerHTML='<span class="roof-badge roof-unknown">Roof: unable to detect</span>';
+    }
+  } catch(e){
+    badge.innerHTML='<span class="roof-badge roof-unknown">Roof: scan failed</span>';
+  }
+}
+
+function buildQuoteCard(q){
+  const sub = q.subtotal || q.lineItems.reduce((s,li)=>s+(li.price||0),0);
+  const bundleSave = q.bundleApplied ? sub*0.20 : 0;
+  const afterBundle = sub - bundleSave;
+  const cardId = 'qc_' + Date.now();
+
+  const rows = q.lineItems.map(li=>`
+    <tr>
+      <td><strong>${li.service}</strong>${li.description?`<br><span style="font-size:11px;color:#64748b">${li.description}</span>`:''}</td>
+      <td><span class="pkg-badge">${li.package}</span></td>
+      <td class="price">${li.isAskChris?'<span class="ask-chris">Ask Chris</span>':fmt(li.price)}</td>
+    </tr>`).join('');
+
+  const bundleRow = q.bundleApplied ? `
+    <tr style="background:#f0fdf4">
+      <td colspan="2" class="green" style="font-size:13px">🎉 Bundle 20% Off</td>
+      <td class="price green">-${fmt(bundleSave)}</td>
+    </tr>` : '';
+
+  const notes = (q.notes&&q.notes.length)?`<div class="notes-section"><div class="label">📋 Notes</div>${q.notes.map(n=>`<div class="note">• ${n}</div>`).join('')}</div>`:'';
+  const upsells = (q.upsells&&q.upsells.length)?`<div class="upsells-section"><div class="label">💡 Upsell Opportunities</div>${q.upsells.map(u=>`<div class="upsell">• ${u}</div>`).join('')}</div>`:'';
+
+  return `
+  <div class="quote-card" id="${cardId}">
+    <div class="qcard-header">
+      <div><h3>Quote Ready</h3><p>${q.address||''}${q.customerName?' — '+q.customerName:''}</p></div>
+      <div class="qcard-actions">
+        <button class="qcard-btn" onclick="copyQ('${cardId}',${afterBundle})">📋 Copy</button>
+        <button class="qcard-btn" onclick="printQ('${cardId}')">🖨️ Print</button>
+      </div>
+    </div>
+    <table class="quote-table">
+      <thead><tr><th>Service</th><th>Package</th><th class="right">Price</th></tr></thead>
+      <tbody>${rows}${bundleRow}</tbody>
+    </table>
+    <div class="totals-section">
+      ${q.bundleApplied?`<div class="t-row"><span style="color:#64748b">Subtotal</span><span style="text-decoration:line-through;color:#94a3b8">${fmt(sub)}</span></div>`:''}
+      <div class="disc-row">
+        <span style="color:#475569">💲 Additional Discount</span>
+        <input type="text" id="disc_${cardId}" placeholder="$0 or 10%" oninput="updateTotal('${cardId}',${afterBundle})">
+      </div>
+      <div id="discrow_${cardId}" style="display:none" class="t-row"><span class="green">Discount Applied</span><span class="green" id="discval_${cardId}"></span></div>
+      <div class="t-row final"><span>Total Estimate</span><span id="total_${cardId}">${fmt(afterBundle)}</span></div>
+      ${q.bundleApplied?`<div class="savings-note">🎉 Customer saves ${fmt(bundleSave)} vs à la carte</div>`:''}
+    </div>
+    ${notes}${upsells}
+  </div>`;
+}
+
+function updateTotal(cardId, afterBundle){
+  const raw = document.getElementById('disc_'+cardId)?.value.trim()||'';
+  let disc = raw.includes('%') ? afterBundle*(parseFloat(raw)/100) : parseFloat(raw.replace('$',''))||0;
+  const final = Math.max(0, afterBundle - disc);
+  const el = document.getElementById('total_'+cardId);
+  const drow = document.getElementById('discrow_'+cardId);
+  const dval = document.getElementById('discval_'+cardId);
+  if(el) el.textContent = fmt(final);
+  if(drow) drow.style.display = disc>0?'flex':'none';
+  if(dval) dval.textContent = '-'+fmt(disc);
+}
+
+function copyQ(cardId, afterBundle){
+  const card = document.getElementById(cardId);
+  if(!card) return;
+  const lines = ['ProClean Team — Quote'];
+  const addr = card.querySelector('.qcard-header p')?.textContent;
+  if(addr) lines.push(addr);
+  lines.push('Date: '+new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}));
+  lines.push('','SERVICES:');
+  card.querySelectorAll('.quote-table tbody tr').forEach(row=>{
+    const cells=row.querySelectorAll('td');
+    if(cells.length>=3){
+      const svc=cells[0].querySelector('strong')?.textContent||'';
+      const price=cells[2].textContent.trim();
+      lines.push(`  • ${svc}: ${price}`);
+    }
+  });
+  lines.push('','TOTAL: '+(document.getElementById('total_'+cardId)?.textContent||''));
+  lines.push('','Prices are estimates. Final pricing confirmed on-site.','ProClean Team — procleanteam.com');
+  navigator.clipboard.writeText(lines.join('\n')).then(()=>{
+    const btn=event.target.closest('button');
+    const orig=btn.innerHTML; btn.textContent='✓ Copied!';
+    setTimeout(()=>btn.innerHTML=orig,2000);
+  });
+}
+
+function printQ(cardId){
+  const card=document.getElementById(cardId);
+  if(!card) return;
+  const w=window.open('','_blank');
+  w.document.write(`<html><head><title>ProClean Quote</title>
+  <style>body{font-family:Arial,sans-serif;max-width:700px;margin:40px auto;color:#111;font-size:15px}
+  h1{color:#1d4ed8;font-size:22px}table{width:100%;border-collapse:collapse;margin-bottom:20px}
+  th{background:#1d4ed8;color:white;padding:10px 12px;text-align:left;font-size:13px}
+  td{padding:10px 12px;border-bottom:1px solid #eee;font-size:14px}
+  td.right{text-align:right;font-weight:700}.green{color:#16a34a;font-weight:700}
+  .footer{margin-top:40px;font-size:12px;color:#999;text-align:center}
+  </style></head><body>`+card.outerHTML.replace(/onclick="[^"]*"/g,'')+
+  `<div class="footer">ProClean Team · Created with Perplexity Computer</div></body></html>`);
+  w.document.close(); setTimeout(()=>w.print(),500);
+}
+
+function addMessage(role, content, quoteData){
+  hideWelcome();
+  const chat = document.getElementById('chat');
+  const div = document.createElement('div');
+  div.className = 'msg '+role;
+  if(role==='user'){
+    div.innerHTML=`<div class="bubble">${escHtml(content)}</div>`;
+  } else {
+    const html=renderMd(content);
+    const qHtml=quoteData&&quoteData.ready?buildQuoteCard(quoteData):'';
+    div.innerHTML=`<div class="bubble">${html}${qHtml}</div>`;
+  }
+  chat.appendChild(div);
+  scrollBottom();
+}
+
+function extractAddress(text){
+  const patterns=[
+    /\d{2,5}\s+[A-Za-z0-9\s]+(?:Ave|St|Dr|Rd|Blvd|Way|Ln|Ct|Pl|Loop|Hwy|Pkwy)[.,\s]+[A-Za-z\s]+,?\s*[A-Z]{2}\s*\d{5}/i,
+    /\d{2,5}\s+[A-Za-z0-9\s]+(?:Ave|St|Dr|Rd|Blvd|Way|Ln|Ct|Pl)[^,]*,[^,]+,[^,]+/i,
+  ];
+  for(const p of patterns){ const m=text.match(p); if(m) return m[0].trim(); }
+  return null;
+}
+
+async function sendMessage(){
+  const input = document.getElementById('msg-input');
+  const msg = input.value.trim();
+  if(!msg) return;
+  input.value='';
+  addMessage('user', msg);
+
+  const addr = extractAddress(msg);
+  if(addr && !propertyData){
+    setLoading(true,'Looking up property…');
+    try {
+      const r = await fetch(`${API}/api/lookup`,{
+        method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({address:addr})
+      });
+      const data = await r.json();
+      const scraped = data.propertyData || {};
+      propertyData = {
+        address: addr, inServiceArea: data.inServiceArea,
+        sqft: scraped.sqft||null, stories: scraped.stories||null,
+        beds: scraped.bedrooms||null, baths: scraped.bathrooms||null,
+        yearBuilt: scraped.yearBuilt||null, lotSqft: scraped.lotSqft||null,
+        roofType: scraped.roofType||null, parcel: scraped.parcel||null,
+        redfinUrl: data.redfinUrl, zillowUrl: data.zillowUrl,
+        realtorUrl: data.realtorUrl, mapsUrl: data.mapsUrl,
+        satelliteUrl: data.satelliteUrl, assessorLinks: data.assessorLinks,
+      };
+      showPropertyBar(propertyData);
+      analyzeRoof(addr, propertyData);
+    } catch(e){}
+  }
+
+  setLoading(true,'Calculating quote…');
+  try {
+    const r = await fetch(`${API}/api/chat`,{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({message:msg, propertyData})
+    });
+    if(!r.ok) throw new Error('Server error '+r.status);
+    const data = await r.json();
+    addMessage('assistant', data.message, data.quoteData);
+  } catch(e){
+    addMessage('assistant','⚠️ Connection error — please try again in a moment.');
+  } finally {
+    setLoading(false);
+  }
+}
+
+function useChip(text){ document.getElementById('msg-input').value=text; document.getElementById('msg-input').focus(); }
+
+function startNew(){
+  propertyData=null;
+  fetch(`${API}/api/session/clear`,{method:'POST'}).catch(()=>{});
+  document.getElementById('chat').innerHTML=`<div id="welcome">
+    <div class="icon"><svg width="26" height="26" fill="none" viewBox="0 0 24 24" stroke="#2563eb" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg></div>
+    <h2>Ready to quote</h2>
+    <p>Just tell me the customer's address and what they're looking for.<br>I'll look up the property and build the quote.</p>
+    <p class="chips-label">Try an example:</p>
+    <button class="chip" onclick="useChip(this.textContent)">Moss removal + deck cleaning — 515 NE 123rd St, Seattle WA 98125</button>
+    <button class="chip" onclick="useChip(this.textContent)">Gutter cleaning quote — 21546 Elm Dr, Brier WA 98036</button>
+    <button class="chip" onclick="useChip(this.textContent)">House washing + windows — 443 Halladay St, Seattle WA 98109</button>
+  </div>`;
+  document.getElementById('prop-bar-wrap').classList.remove('visible');
+  document.getElementById('oos-wrap').classList.remove('visible');
+  document.getElementById('msg-input').value='';
+  document.getElementById('msg-input').focus();
+}
+
+document.getElementById('msg-input').addEventListener('keydown', e=>{
+  if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); sendMessage(); }
+});
+document.getElementById('msg-input').focus();
+</script>
+</body>
+</html>
